@@ -3,7 +3,9 @@ package extension.share;
 //#if blackberry
 import String;
 import openfl.utils.ByteArray;
+#if (openfl && !nme)
 import openfl.display.JPEGEncoderOptions;
+#end
 import openfl.display.BitmapData;
 typedef ShareQueryResult = {
 	key : String,
@@ -83,7 +85,9 @@ class Share {
 	#if (android || ios)
 	public static function saveBitmapData(bdm:BitmapData, fName="shareimage.jpg"):String {
 		var imagePath:String = "";
-		#if (!lime_legacy)
+		#if nme
+			imagePath = nme.filesystem.File.documentsDirectory.nativePath + "/" + fName;
+		#elseif (!lime_legacy)
 			imagePath = lime.system.System.documentsDirectory + "/" + fName;
 		#else
 			imagePath = openfl.utils.SystemPath.documentsDirectory + "/" + fName;
@@ -92,15 +96,19 @@ class Share {
 			try {
 				sys.FileSystem.deleteFile(imagePath);
 			} catch(e:Dynamic) {
-				trace("deleting image failed");
+				trace('deleting image $imagePath failed');
 				return null;
 			}
 		}
+		#if nme
+		var bytes:ByteArray = bdm.encode("jpg");
+		#else
 		var bytes:ByteArray = bdm.encode(bdm.rect, new JPEGEncoderOptions());
+		#end
 		try {
 			sys.io.File.saveBytes(imagePath, bytes);
 		} catch(e:Dynamic) {
-			trace("saving image failed");
+			trace('saving image $imagePath failed');
 			return null;
 		}
 		return imagePath;
